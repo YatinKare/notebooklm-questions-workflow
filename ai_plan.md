@@ -52,9 +52,10 @@ backend/app/
 ```
 
 ### 2.3 Database
-- [ ] `db.py` runs the PRD §5.4 schema as `CREATE TABLE IF NOT EXISTS` on startup. No external migration tool — single file, single user.
-- [ ] CRUD helpers: `create_upload`, `update_state`, `insert_questions`, `update_question_answer`, `list_uploads(limit=50)`, `get_upload_full(id)`.
-- [ ] Nightly cleanup task (asyncio background task) that deletes rows beyond the 50-most-recent cap.
+- [x] `db.py` runs the PRD §5.4 schema as `CREATE TABLE IF NOT EXISTS` on startup. No external migration tool — single file, single user.
+- [x] CRUD helpers: `create_upload`, `update_state`, `insert_questions`, `update_question_answer`, `list_uploads(limit=50)`, `get_upload_full(id)`.
+- [x] Nightly cleanup task (asyncio background task) that deletes rows beyond the 50-most-recent cap.
+- [x] **Smoke test:** throwaway `scripts/_smoke_db.py` that calls `create_upload`, `update_state`, `insert_questions`, `update_question_answer`, `get_upload_full`, then asserts the round-trip matches. Run, confirm green, delete the script before commit.
 
 ### 2.4 Pipeline orchestrator
 - [ ] Single asyncio queue + worker task started on FastAPI startup.
@@ -62,18 +63,21 @@ backend/app/
 - [ ] Every stage transition: write to SQLite, push `stage_changed` event onto the event bus.
 - [ ] Verifier stage: `asyncio.gather` over per-question verifier calls (PRD §5.3 — they don't touch NotebookLM).
 - [ ] Parsing retry: one retry with stricter "ONLY valid JSON" preamble (PRD §5.2 step 3). Second failure → mark job `error`, persist the raw NotebookLM response into `uploads.raw_notebooklm_response` for the UI's "show raw" toggle.
+- [ ] **Smoke test:** throwaway `scripts/_smoke_pipeline.py` that monkeypatches the extractor, NotebookLM client, and verifier with stub coroutines returning canned data, enqueues one job, and asserts stages fire in order `extracting → querying → parsing → verifying → done` plus the expected SSE events land on the bus. Also exercise the parsing-retry → `error` path with a stub that returns malformed JSON twice. Delete the script before commit.
 
 ### 2.5 Agents (ADK, code-first)
 - [ ] `extractor_agent`: vision-capable Gemini model, single LLM call, no tools. Prompt instructs it to return strict JSON `[{number, type, stem, options?}]` and to use exactly the seven `type` values from PRD §5.2.
 - [ ] `verifier_agent`: text Gemini model, no tools. Input: question + options + NotebookLM's draft answer + justification. Output: `{correct_answer, reasoning, confidence: "high"|"low", flagged: bool}`.
 - [ ] Both prompts kept in the agent files (not externalized) and written to be the main quality lever — easy to tweak.
 - [ ] Model IDs read from config so the user can swap Pro ↔ Flash without code edits.
+- [ ] **Smoke test:** throwaway `scripts/_smoke_agents.py` that runs `extractor_agent` against one sample screenshot in `scripts/test-images/` and `verifier_agent` against a hand-written `(question, draft_answer)` pair, prints both outputs, and asserts the JSON shape matches PRD §5.2 (extractor) and the verifier schema. Requires `GOOGLE_API_KEY`. Delete the script before commit.
 
 ### 2.6 NotebookLM MCP client
 - [ ] On FastAPI startup: spawn `notebooklm-mcp-cli` (or whatever the MCP server binary is named after `uv tool install`) as a subprocess; speak MCP over stdio.
 - [ ] Wrap the "ask question" MCP tool in an async method `client.ask(prompt: str) -> str`.
 - [ ] Robustness: timeout, single auto-restart on subprocess crash, log stderr. Exit cleanly on FastAPI shutdown.
 - [ ] Read `NOTEBOOK_ID` and `NLM_COOKIE_PATH` from config and pass through.
+- [ ] **Smoke test:** throwaway `scripts/_smoke_mcp.py` that spawns the MCP subprocess, calls `client.ask("Give me one sample question from this notebook.")`, prints the response, and exits cleanly. Confirms cookies + `NOTEBOOK_ID` work and the subprocess lifecycle is sane. Requires user_plan §2 to be done. Delete the script before commit.
 
 ### 2.7 SSE
 - [ ] `GET /events/{job_id}` opens an `EventSourceResponse` (sse-starlette). Subscribes to that job's queue on the event bus, yields events as they come, closes on `done`/`error`.
