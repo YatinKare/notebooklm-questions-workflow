@@ -73,11 +73,11 @@ backend/app/
 - [x] **Smoke test:** throwaway `scripts/_smoke_agents.py` that runs `extractor_agent` against one sample screenshot in `scripts/test-images/` and `verifier_agent` against a hand-written `(question, draft_answer)` pair, prints both outputs, and asserts the JSON shape matches PRD §5.2 (extractor) and the verifier schema. Requires `GOOGLE_API_KEY`. Delete the script before commit.
 
 ### 2.6 NotebookLM MCP client
-- [ ] On FastAPI startup: spawn `notebooklm-mcp-cli` (or whatever the MCP server binary is named after `uv tool install`) as a subprocess; speak MCP over stdio.
-- [ ] Wrap the "ask question" MCP tool in an async method `client.ask(prompt: str) -> str`.
-- [ ] Robustness: timeout, single auto-restart on subprocess crash, log stderr. Exit cleanly on FastAPI shutdown.
-- [ ] Read `NOTEBOOK_ID` and `NLM_COOKIE_PATH` from config and pass through.
-- [ ] **Smoke test:** throwaway `scripts/_smoke_mcp.py` that spawns the MCP subprocess, calls `client.ask("Give me one sample question from this notebook.")`, prints the response, and exits cleanly. Confirms cookies + `NOTEBOOK_ID` work and the subprocess lifecycle is sane. Requires user_plan §2 to be done. Delete the script before commit.
+- [x] On FastAPI startup: spawn `notebooklm-mcp-cli` (or whatever the MCP server binary is named after `uv tool install`) as a subprocess; speak MCP over stdio.
+- [x] Wrap the "ask question" MCP tool in an async method `client.ask(prompt: str) -> str`.
+- [x] Robustness: timeout, single auto-restart on subprocess crash, log stderr. Exit cleanly on FastAPI shutdown.
+- [x] Read `NOTEBOOK_ID` and `NLM_COOKIE_PATH` from config and pass through.
+- [x] **Smoke test:** throwaway `scripts/_smoke_mcp.py` that spawns the MCP subprocess, calls `client.ask("Give me one sample question from this notebook.")`, prints the response, and exits cleanly. Confirms cookies + `NOTEBOOK_ID` work and the subprocess lifecycle is sane. Requires user_plan §2 to be done. Delete the script before commit.
 
 ### 2.7 SSE
 - [ ] `GET /events/{job_id}` opens an `EventSourceResponse` (sse-starlette). Subscribes to that job's queue on the event bus, yields events as they come, closes on `done`/`error`.

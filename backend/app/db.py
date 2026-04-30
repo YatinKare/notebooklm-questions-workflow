@@ -10,10 +10,10 @@ from typing import Any
 
 import aiosqlite
 
-logger = logging.getLogger(__name__)
-
 from .config import settings
-from .models import Question, QuestionType, Upload, UploadState, UploadSummary
+from .models import Question, Upload, UploadState, UploadSummary
+
+logger = logging.getLogger(__name__)
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS uploads (
