@@ -16,6 +16,10 @@ from .routes import events, health, uploads
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await db.init_db()
     cleanup_task = asyncio.create_task(db.nightly_cleanup_loop())
+    # TODO(§2.6): once Extractor/NotebookLMClient/Verifier are implemented,
+    # construct PipelineOrchestrator(...) here, call set_orchestrator(o) and
+    # await o.start(); stop it in the finally block. Until then POST /uploads
+    # has nothing to enqueue against.
     try:
         yield
     finally:

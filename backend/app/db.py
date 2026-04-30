@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import aiosqlite
+
+logger = logging.getLogger(__name__)
 
 from .config import settings
 from .models import Question, QuestionType, Upload, UploadState, UploadSummary
@@ -250,5 +253,5 @@ async def nightly_cleanup_loop(interval_seconds: float = 24 * 60 * 60) -> None:
         try:
             await cleanup_old_uploads()
         except Exception:
-            pass
+            logger.exception("nightly_cleanup_loop iteration failed")
         await asyncio.sleep(interval_seconds)

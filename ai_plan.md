@@ -58,12 +58,12 @@ backend/app/
 - [x] **Smoke test:** throwaway `scripts/_smoke_db.py` that calls `create_upload`, `update_state`, `insert_questions`, `update_question_answer`, `get_upload_full`, then asserts the round-trip matches. Run, confirm green, delete the script before commit.
 
 ### 2.4 Pipeline orchestrator
-- [ ] Single asyncio queue + worker task started on FastAPI startup.
-- [ ] Job lifecycle exactly matches PRD §5.2 stages: `extracting → querying → parsing → verifying → done` (or `error`).
-- [ ] Every stage transition: write to SQLite, push `stage_changed` event onto the event bus.
-- [ ] Verifier stage: `asyncio.gather` over per-question verifier calls (PRD §5.3 — they don't touch NotebookLM).
-- [ ] Parsing retry: one retry with stricter "ONLY valid JSON" preamble (PRD §5.2 step 3). Second failure → mark job `error`, persist the raw NotebookLM response into `uploads.raw_notebooklm_response` for the UI's "show raw" toggle.
-- [ ] **Smoke test:** throwaway `scripts/_smoke_pipeline.py` that monkeypatches the extractor, NotebookLM client, and verifier with stub coroutines returning canned data, enqueues one job, and asserts stages fire in order `extracting → querying → parsing → verifying → done` plus the expected SSE events land on the bus. Also exercise the parsing-retry → `error` path with a stub that returns malformed JSON twice. Delete the script before commit.
+- [x] Single asyncio queue + worker task started on FastAPI startup.
+- [x] Job lifecycle exactly matches PRD §5.2 stages: `extracting → querying → parsing → verifying → done` (or `error`).
+- [x] Every stage transition: write to SQLite, push `stage_changed` event onto the event bus.
+- [x] Verifier stage: `asyncio.gather` over per-question verifier calls (PRD §5.3 — they don't touch NotebookLM).
+- [x] Parsing retry: one retry with stricter "ONLY valid JSON" preamble (PRD §5.2 step 3). Second failure → mark job `error`, persist the raw NotebookLM response into `uploads.raw_notebooklm_response` for the UI's "show raw" toggle.
+- [x] **Smoke test:** throwaway `scripts/_smoke_pipeline.py` that monkeypatches the extractor, NotebookLM client, and verifier with stub coroutines returning canned data, enqueues one job, and asserts stages fire in order `extracting → querying → parsing → verifying → done` plus the expected SSE events land on the bus. Also exercise the parsing-retry → `error` path with a stub that returns malformed JSON twice. Delete the script before commit.
 
 ### 2.5 Agents (ADK, code-first)
 - [ ] `extractor_agent`: vision-capable Gemini model, single LLM call, no tools. Prompt instructs it to return strict JSON `[{number, type, stem, options?}]` and to use exactly the seven `type` values from PRD §5.2.
