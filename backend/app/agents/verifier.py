@@ -32,11 +32,27 @@ Rules:
 - For SELECT_MULTIPLE and MATCHING, correct_answer may be an array.
 - For other question types, use a string when possible.
 - Use 1-2 concise sentences for reasoning.
-- Set confidence to "high" only when the draft answer and justification are internally consistent.
+- Set confidence to "high" only when the draft answer is supported by the provided source material.
 - Set confidence to "low" and flagged to true if the draft is missing, ambiguous, contradictory,
   unsupported by the justification, or does not match the question/options.
+- Set confidence to "low" and flagged to true if NotebookLM says the answer is not derived from,
+  not found in, not supported by, or irrelevant to the provided sources, even when the answer is
+  generally correct from outside knowledge.
 - Do not call external tools or invent source evidence.
 """.strip()
+
+UNSUPPORTED_SOURCE_MARKERS = (
+    "not derived from",
+    "not found in",
+    "not supported by",
+    "not in the provided source",
+    "not in the source",
+    "outside knowledge",
+    "outside the provided source",
+    "provided sources do not",
+    "irrelevant to the provided source",
+    "irrelevance of the provided source",
+)
 
 
 class VerificationResult(BaseModel):
@@ -94,6 +110,14 @@ class AdkAnswerVerifier:
             ]
         )
         parsed = parse_json_payload(result, VerificationResult)
+        if _mentions_unsupported_source(justification, str(parsed.get("reasoning", ""))):
+            parsed["confidence"] = "low"
+            parsed["flagged"] = True
         if parsed["confidence"] == "low":
             parsed["flagged"] = True
         return cast(dict[str, Any], parsed)
+
+
+def _mentions_unsupported_source(*texts: str) -> bool:
+    combined = " ".join(texts).lower()
+    return any(marker in combined for marker in UNSUPPORTED_SOURCE_MARKERS)

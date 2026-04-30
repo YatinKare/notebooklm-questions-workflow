@@ -80,24 +80,26 @@ backend/app/
 - [x] **Smoke test:** throwaway `scripts/_smoke_mcp.py` that spawns the MCP subprocess, calls `client.ask("Give me one sample question from this notebook.")`, prints the response, and exits cleanly. Confirms cookies + `NOTEBOOK_ID` work and the subprocess lifecycle is sane. Requires user_plan §2 to be done. Delete the script before commit.
 
 ### 2.7 SSE
-- [ ] `GET /events/{job_id}` opens an `EventSourceResponse` (sse-starlette). Subscribes to that job's queue on the event bus, yields events as they come, closes on `done`/`error`.
-- [ ] Events: `stage_changed`, `question_extracted` (one per question after stage 1 so frontend can render placeholders immediately — PRD §2 step 3), `question_completed`, `complete`, `error`.
-- [ ] Heartbeat every 15s to keep Cloudflare from idling the connection.
+- [x] `GET /events/{job_id}` opens an `EventSourceResponse` (sse-starlette). Subscribes to that job's queue on the event bus, yields events as they come, closes on `done`/`error`.
+- [x] Events: `stage_changed`, `question_extracted` (one per question after stage 1 so frontend can render placeholders immediately — PRD §2 step 3), `question_completed`, `complete`, `error`.
+- [x] Heartbeat every 15s to keep Cloudflare from idling the connection.
+- [x] **Smoke test:** throwaway `scripts/_smoke_sse.py` that uses `httpx.AsyncClient` against the FastAPI app, creates a fake upload/questions row directly in SQLite, opens `/events/{job_id}`, publishes `stage_changed`, `question_completed`, and `complete` events through the bus, and asserts the SSE stream receives them in order and closes on `complete`. Also assert a late subscriber receives enough current DB state/backfill to render the job even if early in-memory events were missed. Delete the script before commit.
 
 ### 2.8 Routes
-- [ ] `POST /uploads`: multipart image upload, validate it's an image, create upload row, enqueue, return `{job_id}`. Don't store the raw image — only the extracted questions.
-- [ ] `GET /uploads`: list 50 most recent.
-- [ ] `GET /uploads/{job_id}`: full record so the frontend can re-open from history without replaying SSE.
-- [ ] `GET /health`: returns 200 + checks DB and MCP subprocess liveness.
-- [ ] CORS middleware reading `CORS_ORIGIN`.
+- [x] `POST /uploads`: multipart image upload, validate it's an image, create upload row, enqueue, return `{job_id}`. Don't store the raw image — only the extracted questions.
+- [x] `GET /uploads`: list 50 most recent.
+- [x] `GET /uploads/{job_id}`: full record so the frontend can re-open from history without replaying SSE.
+- [x] `GET /health`: returns 200 + checks DB and MCP subprocess liveness.
+- [x] CORS middleware reading `CORS_ORIGIN`.
+- [x] **Smoke test:** throwaway `scripts/_smoke_routes.py` that monkeypatches the orchestrator with a stub queue, posts a tiny generated PNG to `/uploads`, asserts `{job_id}` is returned, verifies the upload row exists and no raw image bytes are stored, calls `GET /uploads` and `GET /uploads/{job_id}`, checks invalid/non-image upload rejection, and confirms `/health` reports DB + MCP status. Delete the script before commit.
 
 ---
 
 ## 3. Backend infra (needed to deploy before frontend exists)
 
-- [ ] `infra/Dockerfile` exactly per PRD §8 (python:3.12-slim, uv sync, `uv tool install notebooklm-mcp-cli`, uvicorn entrypoint).
-- [ ] `infra/deploy-backend.sh` — wraps the `gcloud run deploy` command from PRD §8 with the volume mount and env vars; reads project ID/region from arguments. For first deploy, set `CORS_ORIGIN=*` so curl tests don't need a frontend yet — tighten to the Pages URL later.
-- [ ] `.dockerignore` excluding `node_modules`, `.venv`, `frontend/`, `*.db`, etc.
+- [x] `infra/Dockerfile` exactly per PRD §8 (python:3.12-slim, uv sync, `uv tool install notebooklm-mcp-cli`, uvicorn entrypoint).
+- [x] `infra/deploy-backend.sh` — wraps the `gcloud run deploy` command from PRD §8 with the volume mount and env vars; reads project ID/region from arguments. For first deploy, set `CORS_ORIGIN=*` so curl tests don't need a frontend yet — tighten to the Pages URL later.
+- [x] `.dockerignore` excluding `node_modules`, `.venv`, `frontend/`, `*.db`, etc.
 
 ---
 
@@ -107,19 +109,74 @@ Goal: prove the deployed backend works end-to-end via HTTP only. No frontend nee
 
 **Prereqs from user_plan:** §1 (gcloud, GCP project), §2 (NotebookLM cookies + `NOTEBOOK_ID`), §3 (Cloud Run volume, secrets, env var values). User_plan §4 (Cloudflare) is NOT needed yet.
 
-- [ ] Confirm with user that user_plan §1–§3 are done and they have: project ID, region, volume name, cookie path inside container, `NOTEBOOK_ID`, `GOOGLE_API_KEY` in Secret Manager.
-- [ ] Run `infra/deploy-backend.sh` (or have the user run it and paste back the Cloud Run URL).
-- [ ] `curl $URL/health` → expect 200, DB + MCP subprocess both healthy. If MCP fails: cookie file path or notebook ID is wrong — fix before continuing.
-- [ ] Run 3 e2e curl tests, each with a different sample screenshot (provide them in `scripts/test-images/`):
-  - [ ] `curl -F "file=@scripts/test-images/q1.png" $URL/uploads` → capture `job_id`.
-  - [ ] `curl -N $URL/events/$JOB_ID` → watch SSE stream; verify `stage_changed` events fire in order `extracting → querying → parsing → verifying → done`, plus one `question_extracted` per question and one `question_completed` per question.
-  - [ ] `curl $URL/uploads/$JOB_ID` → verify the returned JSON: every question has a `correct_answer`, non-empty `reasoning`, a `confidence` value, and the `type` matches one of the seven PRD §5.2 types.
+- [x] Confirm with user that user_plan §1–§3 are done and they have: project ID, region, volume name, cookie path inside container, `NOTEBOOK_ID`, `GOOGLE_API_KEY` in Secret Manager.
+- [x] Run `infra/deploy-backend.sh` (or have the user run it and paste back the Cloud Run URL).
+- [x] `curl $URL/health` → expect 200, DB + MCP subprocess both healthy. If MCP fails: cookie file path or notebook ID is wrong — fix before continuing.
+- [x] Run 3 e2e curl tests, each with a different sample screenshot (provide them in `scripts/test-images/`):
+  - [x] `curl -F "file=@scripts/test-images/q1.png" $URL/uploads` → capture `job_id`.
+  - [x] `curl -N $URL/events/$JOB_ID` → watch SSE stream; verify `stage_changed` events fire in order `extracting → querying → parsing → verifying → done`, plus one `question_extracted` per question and one `question_completed` per question.
+  - [x] `curl $URL/uploads/$JOB_ID` → verify the returned JSON: every question has a `correct_answer`, non-empty `reasoning`, a `confidence` value, and the `type` matches one of the seven PRD §5.2 types.
   - [ ] Sanity-check answers against the source material — they should actually be right, not just well-formed.
 - [ ] Test the error path: upload a screenshot with no questions / unreadable text. Expect `state: error` and `raw_notebooklm_response` populated.
 - [ ] Test the parsing-retry path: temporarily lower the parser's strictness or inject a malformed response in a one-off script to confirm the retry preamble fires. (Optional — only if 5.2 step 3 isn't otherwise exercised.)
-- [ ] Write a short `scripts/e2e-curl.sh` that does the happy-path sequence above so it can be re-run after any backend change.
+- [x] Write a short `scripts/e2e-curl.sh` that does the happy-path sequence above so it can be re-run after any backend change.
 
-Only proceed to §5 (frontend) once all three e2e tests pass.
+Status note, 2026-04-30:
+- Backend is deployed at `https://screenshot-answers-94247799819.us-central1.run.app`; `/health` returns `{"status":"ok","db":"ok","mcp":"ok"}`.
+- Current serving revision is `screenshot-answers-00004-pgp` at 100% traffic.
+- `EXTRACTOR_MODEL` and `VERIFIER_MODEL` are both pinned to `gemini-2.5-flash` in code and Cloud Run.
+
+### 4.1 Resolve Gemini extractor 503 blocker
+
+- [x] Preserve the Cloud Run error logs for investigation:
+  - `/tmp/notebooklm-questions-workflow/gemini-503-cloud-run-logs.json`
+  - `/tmp/notebooklm-questions-workflow/recent-cloud-run-service.log`
+- [x] Review the local retry wrapper in `backend/app/pipeline/stages.py` for transient external-call failures from extractor, NotebookLM query, and verifier calls.
+- [x] Run backend checks locally after the retry change: `cd backend && uv run ruff check app && uv run mypy app`.
+- [x] Rebuild and redeploy the backend image with the retry change using `infra/deploy-backend.sh notebooklm-questions-workflow us-central1 notebooklm-questions-workflow-data "$NOTEBOOK_ID"`.
+- [x] Confirm `/health` still returns `{"status":"ok","db":"ok","mcp":"ok"}` after redeploy.
+- [x] Re-run `scripts/e2e-curl.sh` for `q2.png`. Expected result: transient Gemini 503s are retried inside the job instead of immediately producing `state: error`.
+- [x] Confirm deployed `EXTRACTOR_MODEL` and `VERIFIER_MODEL` remain pinned to `gemini-2.5-flash`.
+- [x] Once q2 passes, rerun q1, q2, and q3 as the official three happy-path tests and continue the Step 4 checklist.
+
+Changes made, 2026-04-30:
+- Added transient retry/backoff in `backend/app/pipeline/stages.py` around extractor, NotebookLM query, and verifier calls.
+- Fixed the retry helper typing so `cd backend && uv run ruff check app && uv run mypy app` both pass.
+- Deployed revision `screenshot-answers-00004-pgp` with `EXTRACTOR_MODEL=gemini-2.5-flash`, `VERIFIER_MODEL=gemini-2.5-flash`, and `NLM_COOKIE_PATH=/mnt/data/profiles/default/cookies.json`.
+- `scripts/e2e-curl.sh https://screenshot-answers-94247799819.us-central1.run.app scripts/test-images/q1.png` passed with job `aef4ae55-596c-4989-b732-fd943ebcf1de`.
+- `scripts/e2e-curl.sh https://screenshot-answers-94247799819.us-central1.run.app scripts/test-images/q2.png` passed with job `e16b08e4-c84b-4ee2-9d24-adafffbfed82`.
+- `scripts/e2e-curl.sh https://screenshot-answers-94247799819.us-central1.run.app scripts/test-images/q3.png` passed with job `3c9bfb70-b4e6-492b-8c3f-56362fda905f`.
+- Current revision error check: `gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="screenshot-answers" AND resource.labels.revision_name="screenshot-answers-00004-pgp" AND severity>=ERROR' --project notebooklm-questions-workflow --limit 20` returns no entries.
+
+### 4.2 Follow-up investigations before frontend
+
+- [x] Source-grounding sanity check: compare q1/q2/q3 answers against the loaded NotebookLM source material, not just response shape. Resources: final job IDs above, `curl https://screenshot-answers-94247799819.us-central1.run.app/uploads/<job_id>`, and the NotebookLM notebook/source set from `user_plan.md` §2.
+- [x] Error-path test: verify an unreadable/no-question screenshot produces a useful `state: error` payload. Commands: upload `scripts/test-images/blank.png`, stream `/events/$JOB_ID`, then inspect `/uploads/$JOB_ID`.
+- [x] Parsing-retry test: add a focused mocked test for malformed NotebookLM JSON twice and confirm the strict retry path persists `raw_notebooklm_response`. Resources: `backend/app/pipeline/stages.py` `_parse_response` / `run_pipeline`; command target should be `cd backend && uv run pytest`.
+- [x] Deployment env hardening: prevent local `.env` values from leaking Mac paths into Cloud Run deploys. Relevant mismatch: `backend/app/config.py` default `NLM_COOKIE_PATH`, `infra/deploy-backend.sh` default path, and `check_before_deploy.md` recommendation differ. Verification command: `gcloud run services describe screenshot-answers --project notebooklm-questions-workflow --region us-central1 --format='value(spec.template.spec.containers[0].env)'`.
+
+Changes made, 2026-04-30:
+- Added a no-question guard in `backend/app/pipeline/stages.py`: if extraction returns `[]`, the job now ends with `state: error`, `error_message="No questions were detected in the uploaded image."`, and `raw_notebooklm_response="Extractor returned no questions; NotebookLM was not queried."`.
+- Added mocked pytest coverage for the no-question path and the malformed-NotebookLM JSON retry path in `backend/tests/test_pipeline_parsing_retry.py`.
+- Added verifier source-grounding hardening in `backend/app/agents/verifier.py`: answers are forced to `confidence="low"` and `flagged=true` when NotebookLM says the answer is not in, not derived from, or unsupported by the provided sources.
+- Added focused tests for the verifier source-grounding marker detection in `backend/tests/test_verifier_grounding.py`.
+- Aligned backend/deploy cookie defaults to the actual mounted Cloud Run layout: `NLM_COOKIE_PATH=/mnt/data/profiles/default/cookies.json`.
+- Hardened `infra/deploy-backend.sh` so `NLM_COOKIE_PATH` and `DB_PATH` must be absolute paths inside the mounted Cloud Run volume, preventing local `/Users/...` `.env` values from leaking into deploys.
+- Local verification passed: `cd backend && uv run pytest` (4 passed), `cd backend && uv run ruff check app tests`, and `cd backend && uv run mypy app`.
+- Deployed revision `screenshot-answers-00005-k7l` at 100% traffic; `/health` returns `{"status":"ok","db":"ok","mcp":"ok"}`.
+- Deployment env verification shows `NLM_COOKIE_PATH=/mnt/data/profiles/default/cookies.json`, `DB_PATH=/mnt/data/app.db`, `EXTRACTOR_MODEL=gemini-2.5-flash`, and `VERIFIER_MODEL=gemini-2.5-flash`.
+- Blank image error-path test passed with job `a0f6c22c-99d3-4864-90f3-df6086dc7ead`.
+- `scripts/e2e-curl.sh https://screenshot-answers-94247799819.us-central1.run.app scripts/test-images/q1.png` passed with job `6637d3c8-3074-4a3a-a737-88392fde6a1c`.
+- `scripts/e2e-curl.sh https://screenshot-answers-94247799819.us-central1.run.app scripts/test-images/q2.png` passed with job `7126dbf0-2bb5-424c-8663-eff812d5564c`.
+- `scripts/e2e-curl.sh https://screenshot-answers-94247799819.us-central1.run.app scripts/test-images/q3.png` passed with job `6806a9c9-98ff-4334-b989-d44d8c8b02c0`.
+- Source-grounding result: q1/q2/q3 are well-formed but not supported by the currently loaded NotebookLM source set; NotebookLM describes the loaded sources as unrelated to these biology/chemistry/history samples, and the verifier now flags all of those answers low-confidence instead of treating outside knowledge as source-grounded.
+- Replaced `scripts/test-images/q1.png`, `q2.png`, and `q3.png` with computer-networking questions matching the loaded NotebookLM source set.
+- Network `q1.png` passed with high-confidence grounded answers: job `f79170a2-2eca-48c1-bbf8-73c7af966911`.
+- Network `q2.png` passed with high-confidence grounded answers: job `3f0219e9-9e27-4d88-870c-e6c110b03066`.
+- Network `q3.png` passed with high-confidence grounded answers: job `6780426a-2996-49e8-a2b3-2c1fb6d683e6`.
+- Quick closure check after network-image update: live `/health` passed, `cd backend && uv run pytest` passed, `cd backend && uv run ruff check app tests` passed, and `cd backend && uv run mypy app` passed.
+
+Only proceed to §5 (frontend) once §4.2 is closed.
 
 ---
 

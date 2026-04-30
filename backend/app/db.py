@@ -55,6 +55,22 @@ async def init_db() -> None:
         await conn.commit()
 
 
+async def health_check() -> bool:
+    try:
+        Path(_db_path()).parent.mkdir(parents=True, exist_ok=True)
+        async with aiosqlite.connect(_db_path()) as conn:
+            await conn.execute("CREATE TEMP TABLE IF NOT EXISTS healthcheck (ok INTEGER)")
+            await conn.execute("DELETE FROM healthcheck")
+            await conn.execute("INSERT INTO healthcheck (ok) VALUES (1)")
+            async with conn.execute("SELECT ok FROM healthcheck LIMIT 1") as cur:
+                row = await cur.fetchone()
+            await conn.commit()
+        return bool(row and row[0] == 1)
+    except Exception:
+        logger.exception("SQLite health check failed")
+        return False
+
+
 def _parse_dt(value: Any) -> datetime:
     if isinstance(value, datetime):
         return value

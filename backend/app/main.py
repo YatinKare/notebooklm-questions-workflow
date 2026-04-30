@@ -8,8 +8,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import db
+from .agents.extractor import AdkQuestionExtractor
+from .agents.verifier import AdkAnswerVerifier
 from .config import settings
 from .notebooklm.client import NotebookLMMCPClient, set_notebooklm_client
+from .pipeline.orchestrator import PipelineOrchestrator, set_orchestrator
 from .routes import events, health, uploads
 
 
@@ -18,15 +21,22 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await db.init_db()
     cleanup_task = asyncio.create_task(db.nightly_cleanup_loop())
     nlm_client = NotebookLMMCPClient()
+    orchestrator: PipelineOrchestrator | None = None
     try:
         await nlm_client.start()
         set_notebooklm_client(nlm_client)
-        # TODO(§2.8): once uploads are implemented,
-        # construct PipelineOrchestrator(...) here, call set_orchestrator(o) and
-        # await o.start(); stop it in the finally block. Until then POST /uploads
-        # has nothing to enqueue against.
+        orchestrator = PipelineOrchestrator(
+            extractor=AdkQuestionExtractor(),
+            nlm=nlm_client,
+            verifier=AdkAnswerVerifier(),
+        )
+        set_orchestrator(orchestrator)
+        await orchestrator.start()
         yield
     finally:
+        set_orchestrator(None)
+        if orchestrator is not None:
+            await orchestrator.stop()
         set_notebooklm_client(None)
         await nlm_client.stop()
         cleanup_task.cancel()

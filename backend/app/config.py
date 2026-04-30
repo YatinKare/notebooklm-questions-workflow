@@ -6,7 +6,7 @@ class Settings(BaseSettings):
 
     google_api_key: str = ""
     notebook_id: str = ""
-    nlm_cookie_path: str = "/mnt/data/nlm_cookies.json"
+    nlm_cookie_path: str = "/mnt/data/profiles/default/cookies.json"
     nlm_mcp_command: str = ""
     nlm_mcp_args: str = ""
     notebooklm_query_timeout: float = 120.0
