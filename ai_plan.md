@@ -8,7 +8,7 @@ Assumes the user has finished `user_plan.md` §1–§4 and handed over: `GOOGLE_
 
 ## 1. Repo scaffolding
 
-- [ ] Top-level layout:
+- [x] Top-level layout:
   ```
   /backend     # Python, uv, FastAPI, ADK
   /frontend    # SvelteKit static
@@ -16,16 +16,16 @@ Assumes the user has finished `user_plan.md` §1–§4 and handed over: `GOOGLE_
   README.md    # one-pager: how to run locally, how to deploy
   .gitignore   # __pycache__, .venv, node_modules, .env, *.db, build/
   ```
-- [ ] Root `README.md` with quickstart (`uv sync`, `uv run uvicorn ...`, `npm run dev`) and a pointer to `user_plan.md`.
+- [x] Root `README.md` with quickstart (`uv sync`, `uv run uvicorn ...`, `npm run dev`) and a pointer to `user_plan.md`.
 
 ---
 
 ## 2. Backend — Python package
 
 ### 2.1 Project setup
-- [ ] `backend/pyproject.toml` with deps: `fastapi`, `uvicorn[standard]`, `google-adk`, `pydantic`, `aiosqlite`, `sse-starlette`, `python-multipart`, `pillow`, `mcp` (or whatever the `notebooklm-mcp-cli` MCP client lib is), `python-dotenv` (dev only).
-- [ ] `uv.lock` committed.
-- [ ] `backend/.env.example` listing every env var from PRD §8 — no real values.
+- [x] `backend/pyproject.toml` with deps: `fastapi`, `uvicorn[standard]`, `google-adk`, `pydantic`, `aiosqlite`, `sse-starlette`, `python-multipart`, `pillow`, `mcp` (or whatever the `notebooklm-mcp-cli` MCP client lib is), `python-dotenv` (dev only).
+- [x] `uv.lock` committed.
+- [x] `backend/.env.example` listing every env var from PRD §8 — no real values.
 
 ### 2.2 Module layout
 ```
