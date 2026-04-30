@@ -66,11 +66,11 @@ backend/app/
 - [x] **Smoke test:** throwaway `scripts/_smoke_pipeline.py` that monkeypatches the extractor, NotebookLM client, and verifier with stub coroutines returning canned data, enqueues one job, and asserts stages fire in order `extracting → querying → parsing → verifying → done` plus the expected SSE events land on the bus. Also exercise the parsing-retry → `error` path with a stub that returns malformed JSON twice. Delete the script before commit.
 
 ### 2.5 Agents (ADK, code-first)
-- [ ] `extractor_agent`: vision-capable Gemini model, single LLM call, no tools. Prompt instructs it to return strict JSON `[{number, type, stem, options?}]` and to use exactly the seven `type` values from PRD §5.2.
-- [ ] `verifier_agent`: text Gemini model, no tools. Input: question + options + NotebookLM's draft answer + justification. Output: `{correct_answer, reasoning, confidence: "high"|"low", flagged: bool}`.
-- [ ] Both prompts kept in the agent files (not externalized) and written to be the main quality lever — easy to tweak.
-- [ ] Model IDs read from config so the user can swap Pro ↔ Flash without code edits.
-- [ ] **Smoke test:** throwaway `scripts/_smoke_agents.py` that runs `extractor_agent` against one sample screenshot in `scripts/test-images/` and `verifier_agent` against a hand-written `(question, draft_answer)` pair, prints both outputs, and asserts the JSON shape matches PRD §5.2 (extractor) and the verifier schema. Requires `GOOGLE_API_KEY`. Delete the script before commit.
+- [x] `extractor_agent`: vision-capable Gemini model, single LLM call, no tools. Prompt instructs it to return strict JSON `[{number, type, stem, options?}]` and to use exactly the seven `type` values from PRD §5.2.
+- [x] `verifier_agent`: text Gemini model, no tools. Input: question + options + NotebookLM's draft answer + justification. Output: `{correct_answer, reasoning, confidence: "high"|"low", flagged: bool}`.
+- [x] Both prompts kept in the agent files (not externalized) and written to be the main quality lever — easy to tweak.
+- [x] Model IDs read from config so the user can swap Pro ↔ Flash without code edits.
+- [x] **Smoke test:** throwaway `scripts/_smoke_agents.py` that runs `extractor_agent` against one sample screenshot in `scripts/test-images/` and `verifier_agent` against a hand-written `(question, draft_answer)` pair, prints both outputs, and asserts the JSON shape matches PRD §5.2 (extractor) and the verifier schema. Requires `GOOGLE_API_KEY`. Delete the script before commit.
 
 ### 2.6 NotebookLM MCP client
 - [ ] On FastAPI startup: spawn `notebooklm-mcp-cli` (or whatever the MCP server binary is named after `uv tool install`) as a subprocess; speak MCP over stdio.
