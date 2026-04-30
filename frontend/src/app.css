@@ -1,0 +1,377 @@
+/* ─── Reset & base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+
+  --bg: #ffffff;
+  --text: #111111;
+  --muted: #666666;
+  --border: #e0e0e0;
+  --border-hover: #aaaaaa;
+
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --amber: #b45309;
+  --amber-light: #fef3c7;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+
+  --radius: 6px;
+  --max-width: 760px;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* ─── Layout ───────────────────────────────────────────── */
+main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.section {
+  margin-top: 32px;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* ─── Drop zone ────────────────────────────────────────── */
+.drop-zone {
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  outline: none;
+}
+
+.drop-zone:hover,
+.drop-zone:focus-visible {
+  border-color: var(--border-hover);
+}
+
+.drop-zone.drag-over {
+  border-color: var(--green);
+  background: var(--green-light);
+}
+
+.drop-zone.uploading {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.drop-label {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.drop-hint {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.file-link {
+  color: var(--text);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.upload-error {
+  margin-top: 8px;
+  color: var(--red);
+  font-size: 13px;
+}
+
+/* ─── Stage label ──────────────────────────────────────── */
+.stage-label {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+/* ─── Card list ────────────────────────────────────────── */
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ─── Question card ────────────────────────────────────── */
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.card--error {
+  border-color: var(--red);
+}
+
+.card--flagged {
+  border-color: var(--amber);
+}
+
+.card-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: default;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text);
+}
+
+.card--done .card-header {
+  cursor: pointer;
+}
+
+.card--done .card-header:hover {
+  background: #f8f8f8;
+}
+
+.card-label {
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 28px;
+}
+
+.card-type {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 12px;
+  margin-left: 2px;
+}
+
+.card-stem {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.card-stage {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.card-answer {
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.answer-tf {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.expand-icon {
+  color: var(--muted);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* ─── Badges ───────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.badge--amber {
+  background: var(--amber-light);
+  color: var(--amber);
+}
+
+/* ─── Spinner ──────────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--text);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Expanded card body ───────────────────────────────── */
+.card-body {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-full-stem {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.options-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.option {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+
+.option--correct {
+  background: var(--green-light);
+  border-color: var(--green);
+  color: var(--green);
+  font-weight: 500;
+}
+
+.reasoning {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.error-msg {
+  color: var(--red);
+  font-size: 13px;
+}
+
+/* ─── Job-level error ──────────────────────────────────── */
+.job-error {
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.job-error details summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  user-select: none;
+}
+
+.raw-response {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: #f4f4f4;
+  padding: 10px;
+  border-radius: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* ─── History ──────────────────────────────────────────── */
+.history-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.history-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 10px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text);
+  text-align: left;
+}
+
+.history-item:hover {
+  background: #f4f4f4;
+}
+
+.history-item--active {
+  border-color: var(--border);
+  background: #f8f8f8;
+}
+
+.history-time {
+  color: var(--muted);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-state {
+  flex: 1;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.history-state--error {
+  color: var(--red);
+}
+
+.history-count {
+  font-size: 12px;
+  color: var(--muted);
+  flex-shrink: 0;
+}

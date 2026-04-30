@@ -183,34 +183,38 @@ Only proceed to §5 (frontend) once §4.2 is closed.
 ## 5. Frontend — SvelteKit static
 
 ### 5.1 Setup
-- [ ] `npm create svelte@latest` with the static adapter (`@sveltejs/adapter-static`).
-- [ ] Configure `svelte.config.js` for full prerender + SPA fallback.
-- [ ] `frontend/.env.example` with `PUBLIC_API_BASE`.
+- [x] Scaffolded SvelteKit with `@sveltejs/adapter-static` (manual scaffold — `sv create` is interactive).
+- [x] `svelte.config.js` with SPA fallback (`fallback: '404.html'`), `+layout.ts` with `ssr: false, prerender: true`.
+- [x] `frontend/.env.example` with `PUBLIC_API_BASE`. `frontend/.env` set to the live Cloud Run URL.
 
 ### 5.2 Components (PRD §6)
-- [ ] `src/routes/+page.svelte` — title, drop zone, current upload card list, history list. No router, single page.
-- [ ] `src/lib/DropZone.svelte` — drag/drop + paste-from-clipboard, POSTs to `/uploads`, kicks off SSE subscription.
-- [ ] `src/lib/QuestionCard.svelte` — collapsed and expanded states from PRD §6 "Card states", including the "show raw response" toggle on error.
-- [ ] `src/lib/eventSource.ts` — SSE wrapper, reconnect on drop, dispatches into a Svelte store keyed by `job_id`.
-- [ ] `src/lib/api.ts` — typed fetch helpers for the four REST endpoints.
-- [ ] `src/lib/stores.ts` — Svelte stores for current upload, history, per-card state.
+- [x] `src/routes/+page.svelte` — title, drop zone, current upload card list, history list. No router, single page.
+- [x] `src/lib/DropZone.svelte` — drag/drop + paste-from-clipboard, POSTs to `/uploads`, kicks off SSE subscription.
+- [x] `src/lib/QuestionCard.svelte` — collapsed and expanded states from PRD §6 "Card states", including the "show raw response" toggle on error.
+- [x] `src/lib/eventSource.ts` — SSE wrapper, up to 3 reconnect retries, dispatches into the stores singleton.
+- [x] `src/lib/api.ts` — typed fetch helpers for the four REST endpoints.
+- [x] `src/lib/stores.svelte.ts` — Svelte 5 `$state` class singleton for current upload, history, per-card state.
 
 ### 5.3 Styling
-- [ ] One `app.css`, system fonts, two colors (black/white) + green accent + amber warning, exactly as PRD §6 says. No CSS framework.
+- [x] `src/app.css` — system fonts, black/white + green accent (`#16a34a`) + amber warning (`#b45309`). No CSS framework.
+
+Build: `npm run build` passes, `npm run check` reports 0 errors / 0 warnings (2026-04-30).
 
 ### 5.4 Behavior details
-- [ ] Render placeholder cards as soon as `question_extracted` events arrive, before answers exist (PRD §2 step 3).
-- [ ] On page load, `GET /uploads` to populate history. Clicking a history item calls `GET /uploads/{id}` and re-renders cards in their final state (no SSE replay).
-- [ ] MCQ: bold the picked letter when collapsed; highlight the correct option when expanded.
-- [ ] Low-confidence flag → amber badge on the card.
+- [x] Placeholder cards appear on `question_extracted` events (stem + spinner + stage label); fill in on `question_completed`.
+- [x] On page load, `GET /uploads` populates history. Clicking a history item calls `GET /uploads/{id}` and loads cards from final DB state (no SSE replay).
+- [x] MCQ: `→ **A**` bolded when collapsed; correct option highlighted green when expanded.
+- [x] T/F: answer shown in green when collapsed.
+- [x] Low-confidence flag → amber badge on both collapsed and expanded card.
+- [x] Pending card shows stem + italic stage label (`querying NotebookLM…` etc.) + spinner.
 
 ---
 
 ## 6. Frontend infra + deploy
 
-- [ ] `infra/wrangler.toml` with `pages_build_output_dir = "build"`.
-- [ ] `infra/deploy-frontend.sh` — `npm run build && npx wrangler pages deploy build`.
-- [ ] After Pages deploys, paste the Pages URL back into Cloud Run as `CORS_ORIGIN` and redeploy the backend (tightening the `*` from §4).
+- [x] `infra/wrangler.toml` with `pages_build_output_dir = "build"`.
+- [x] `infra/deploy-frontend.sh` — `npm install && npm run build && npx wrangler pages deploy build`.
+- [ ] **User action:** run `./infra/deploy-frontend.sh`, copy the Pages URL, update `CORS_ORIGIN` in Cloud Run (command printed by the script).
 - [ ] Smoke-test the full stack in a browser: drop a screenshot, confirm cards stream in via SSE.
 
 ---
