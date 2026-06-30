@@ -43,6 +43,11 @@ class Settings(BaseSettings):
             local_cookie = Path(__file__).parent.parent / "cookies.json"
             self.nlm_cookie_path = str(local_cookie.resolve())
 
+        # Propagate the loaded API key to environment variables so the Google ADK and GenAI SDKs can pick it up
+        if self.google_api_key:
+            os.environ["GEMINI_API_KEY"] = self.google_api_key
+            os.environ["GOOGLE_API_KEY"] = self.google_api_key
+
         return self
 
 
